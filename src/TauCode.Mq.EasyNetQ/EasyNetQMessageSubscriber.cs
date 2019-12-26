@@ -1,45 +1,79 @@
-﻿using EasyNetQ;
+﻿using System;
+using EasyNetQ;
 using EasyNetQ.NonGeneric;
-using System;
+using TauCode.Working;
 
 namespace TauCode.Mq.EasyNetQ
 {
-    public class EasyNetQMessageSubscriber : MessageSubscriberBase
+    // todo: clean up
+    public class EasyNetQMessageSubscriber : MessageSubscriberBase, IEasyNetQMessageSubscriber
     {
-        #region Fields
-
-        private readonly string _connectionString;
+        private string _connectionString;
         private IBus _bus;
+        //private readonly IMessageHandlerFactoryLab _factory;
 
-        #endregion
-
-        #region Constructor
-
-        public EasyNetQMessageSubscriber(string name, string connectionString)
-            : base(name)
+        public EasyNetQMessageSubscriber(IMessageHandlerContextFactory contextFactory)
+            : base(contextFactory)
         {
-            _connectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
-        }
-
-        #endregion
-
-        #region Overridden
-
-        protected override IDisposable SubscribeImpl(Type messageType, string subscriptionId, Action<object> callback)
-        {
-            return _bus.Subscribe(messageType, subscriptionId, callback);
+            //_factory = factory ?? throw new ArgumentNullException(nameof(factory));
         }
 
         protected override void StartImpl()
         {
-            _bus = RabbitHutch.CreateBus(_connectionString);
+            base.StartImpl();
+            _bus = RabbitHutch.CreateBus(this.ConnectionString);
+            this.SubscribeBus();
+        }
+
+        private void SubscribeBus()
+        {
+            foreach (var pair in this.Bundles)
+            {
+                var subId = Guid.NewGuid().ToString(); // todo
+                var bundle = pair.Value;
+                var topic = bundle.Topic;
+
+                if (topic == null)
+                {
+                    _bus.Subscribe(bundle.MessageType, subId, bundle.Handle);
+                }
+                else
+                {
+                    _bus.Subscribe(bundle.MessageType, subId, bundle.Handle, configuration => configuration.WithTopic(topic));
+                }
+            }
+
+
+            //_bus.Subscribe()
+
+            //_bus.Subscribe("wat", this.Wat, configuration => configuration.WithTopic(topic));
+            //_bus.Subscribe()
+        }
+
+        //protected override IMessageHandlerFactoryLab CreateFactory() => _factory;
+
+        protected override void StopImpl()
+        {
+            base.StopImpl();
+            _bus.Dispose();
+            _bus = null;
         }
 
         protected override void DisposeImpl()
         {
+            base.DisposeImpl();
             _bus.Dispose();
+            _bus = null;
         }
 
-        #endregion
+        public string ConnectionString
+        {
+            get => _connectionString;
+            set
+            {
+                this.CheckStateForOperation(WorkerState.Stopped);
+                _connectionString = value;
+            }
+        }
     }
 }

@@ -1,44 +1,52 @@
 ﻿using EasyNetQ;
 using EasyNetQ.NonGeneric;
-using System;
+using TauCode.Working;
 
 namespace TauCode.Mq.EasyNetQ
 {
-    public class EasyNetQMessagePublisher : MessagePublisherBase
+    public class EasyNetQMessagePublisher : MessagePublisherBase, IEasyNetQMessagePublisher
     {
-        #region Fields
-
-        private readonly string _connectionString;
+        private string _connectionString;
         private IBus _bus;
-
-        #endregion
-
-        #region Constructor
-
-        public EasyNetQMessagePublisher(string connectionString)
-        {
-            _connectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
-        }
-
-        #endregion
-
-        #region Overridden
 
         protected override void StartImpl()
         {
-            _bus = RabbitHutch.CreateBus(_connectionString);
+            base.StartImpl();
+            _bus = RabbitHutch.CreateBus(this.ConnectionString);
         }
 
-        protected override void PublishImpl(object message)
+        protected override void StopImpl()
         {
-            _bus.Publish(message.GetType(), message);
+            base.StopImpl();
+            _bus.Dispose();
+            _bus = null;
         }
 
         protected override void DisposeImpl()
         {
+            base.DisposeImpl();
             _bus.Dispose();
+            _bus = null;
         }
 
-        #endregion
+        protected override void PublishImpl(IMessage message)
+        {
+            _bus.Publish(message.GetType(), message);
+        }
+
+        protected override void PublishImpl(IMessage message, string topic)
+        {
+            _bus.Publish(message.GetType(), message, topic);
+        }
+
+        public string ConnectionString
+        {
+            get => _connectionString;
+            set
+            {
+                this.CheckStateForOperation(WorkerState.Stopped);
+                _connectionString = value;
+            }
+        }
     }
 }
