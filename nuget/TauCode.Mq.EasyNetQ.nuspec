@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
   <metadata>
     <id>TauCode.Mq.EasyNetQ</id>
-    <version>1.0.0.0-dev-2019-12-22-21-47</version>
+    <version>1.0.0.0-dev-2019-12-26-18-16</version>
     <authors>TauCode</authors>
     <owners>TauCode</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
@@ -15,7 +15,7 @@
     <tags>taucode message queue easynetq rabbitmq</tags>
     <dependencies>
       <dependency id="EasyNetQ" version="3.7.1" />
-      <dependency id="TauCode.Mq" version="1.0.0-dev-2019-12-22-21-39" />
+      <dependency id="TauCode.Mq" version="1.0.0-dev-2019-12-26-17-59" />
     </dependencies>
   </metadata>
   <files>
