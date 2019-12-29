@@ -1,21 +1,18 @@
-﻿using System;
-using EasyNetQ;
+﻿using EasyNetQ;
 using EasyNetQ.NonGeneric;
+using System;
 using TauCode.Working;
 
 namespace TauCode.Mq.EasyNetQ
 {
-    // todo: clean up
     public class EasyNetQMessageSubscriber : MessageSubscriberBase, IEasyNetQMessageSubscriber
     {
         private string _connectionString;
         private IBus _bus;
-        //private readonly IMessageHandlerFactoryLab _factory;
 
         public EasyNetQMessageSubscriber(IMessageHandlerContextFactory contextFactory)
             : base(contextFactory)
         {
-            //_factory = factory ?? throw new ArgumentNullException(nameof(factory));
         }
 
         protected override void StartImpl()
@@ -42,15 +39,7 @@ namespace TauCode.Mq.EasyNetQ
                     _bus.Subscribe(bundle.MessageType, subId, bundle.Handle, configuration => configuration.WithTopic(topic));
                 }
             }
-
-
-            //_bus.Subscribe()
-
-            //_bus.Subscribe("wat", this.Wat, configuration => configuration.WithTopic(topic));
-            //_bus.Subscribe()
         }
-
-        //protected override IMessageHandlerFactoryLab CreateFactory() => _factory;
 
         protected override void StopImpl()
         {

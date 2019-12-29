@@ -1,6 +1,7 @@
 ﻿using EasyNetQ;
 using EasyNetQ.NonGeneric;
 using TauCode.Working;
+using IMqMessage = TauCode.Mq.Abstractions.IMessage;
 
 namespace TauCode.Mq.EasyNetQ
 {
@@ -29,12 +30,12 @@ namespace TauCode.Mq.EasyNetQ
             _bus = null;
         }
 
-        protected override void PublishImpl(IMessage message)
+        protected override void PublishImpl(IMqMessage message)
         {
             _bus.Publish(message.GetType(), message);
         }
 
-        protected override void PublishImpl(IMessage message, string topic)
+        protected override void PublishImpl(IMqMessage message, string topic)
         {
             _bus.Publish(message.GetType(), message, topic);
         }
