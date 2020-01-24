@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+  <metadata>
+    <id>TauCode.Mq.EasyNetQ</id>
+    <version>1.0.0.0-dev-2019-12-29-16-33</version>
+    <authors>TauCode</authors>
+    <owners>TauCode</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <license type="file">LICENSE.txt</license>
+    <projectUrl>https://github.com/taucode/taucode.mq.easynetq</projectUrl>
+    <description>Message queue support via EasyNetQ, a .NET RabbitMQ library</description>
+    <releaseNotes>
+      Moving to nuget.org
+    </releaseNotes>
+    <tags>taucode message queue easynetq rabbitmq</tags>
+    <dependencies>
+      <dependency id="EasyNetQ" version="3.7.1" />
+      <dependency id="TauCode.Mq" version="1.0.0-dev-2019-12-29-16-05" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="..\LICENSE.txt" target="" />
+    <file src="..\src\TauCode.Mq.EasyNetQ\bin\Release\netstandard2.0\TauCode.Mq.EasyNetQ.dll" target="lib\netstandard2.0" />
+    <file src="..\src\TauCode.Mq.EasyNetQ\bin\Release\netstandard2.0\TauCode.Mq.EasyNetQ.pdb" target="lib\netstandard2.0" />
+  </files>
+</package>
