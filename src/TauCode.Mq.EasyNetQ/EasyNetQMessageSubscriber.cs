@@ -6,7 +6,6 @@ using TauCode.Working;
 
 namespace TauCode.Mq.EasyNetQ
 {
-    // todo: clean up
     public class EasyNetQMessageSubscriber : MessageSubscriberBase, IEasyNetQMessageSubscriber
     {
         private string _connectionString;
