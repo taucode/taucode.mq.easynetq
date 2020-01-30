@@ -1,6 +1,8 @@
-﻿using EasyNetQ;
-using EasyNetQ.NonGeneric;
+﻿using EasyNetQ.NonGeneric;
+using TauCode.Mq.Abstractions;
 using TauCode.Working;
+using IBus = EasyNetQ.IBus;
+using RabbitHutch = EasyNetQ.RabbitHutch;
 
 namespace TauCode.Mq.EasyNetQ
 {
