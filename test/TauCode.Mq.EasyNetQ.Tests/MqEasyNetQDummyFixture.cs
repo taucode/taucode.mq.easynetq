@@ -8,7 +8,7 @@ namespace TauCode.Mq.EasyNetQ.Tests
         [Test]
         public void MqEasyNetQDummyTest()
         {
-            Assert.Pass("Added for Jenkins compatibility");
+            Assert.Pass("Added for Azure DevOps compatibility.");
         }
     }
 }
