@@ -51,7 +51,6 @@ namespace TauCode.Mq.EasyNetQ
         protected override void PublishImpl(IMessage message)
         {
             _bus.Publish(message.GetType(), message);
-
         }
 
         protected override void PublishImpl(IMessage message, string topic)
