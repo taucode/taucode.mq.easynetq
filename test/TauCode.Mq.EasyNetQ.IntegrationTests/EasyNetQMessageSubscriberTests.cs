@@ -1,11 +1,10 @@
-﻿using System;
-using System.Text;
-using System.Threading.Tasks;
-using EasyNetQ;
+﻿using EasyNetQ;
 using NUnit.Framework;
 using Serilog;
+using System;
+using System.Text;
+using System.Threading.Tasks;
 using TauCode.Extensions;
-using TauCode.Infrastructure.Time;
 using TauCode.Mq.EasyNetQ.IntegrationTests.BadHandlers;
 using TauCode.Mq.EasyNetQ.IntegrationTests.ContextFactories;
 using TauCode.Mq.EasyNetQ.IntegrationTests.Contexts;
@@ -30,7 +29,6 @@ namespace TauCode.Mq.EasyNetQ.IntegrationTests
         [SetUp]
         public void SetUp()
         {
-            TimeProvider.Reset();
             MessageRepository.Instance.Clear();
 
             _log = new StringWriterWithEncoding(Encoding.UTF8);
