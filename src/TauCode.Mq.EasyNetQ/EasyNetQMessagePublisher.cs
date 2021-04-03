@@ -1,5 +1,5 @@
-﻿using System;
-using EasyNetQ.NonGeneric;
+﻿using EasyNetQ.NonGeneric;
+using System;
 using TauCode.Mq.Abstractions;
 using TauCode.Mq.Exceptions;
 using TauCode.Working;
@@ -20,7 +20,7 @@ namespace TauCode.Mq.EasyNetQ
         #region Constructors
 
         public EasyNetQMessagePublisher()
-        {   
+        {
         }
 
         public EasyNetQMessagePublisher(string connectionString)
@@ -50,14 +50,21 @@ namespace TauCode.Mq.EasyNetQ
 
         protected override void PublishImpl(IMessage message)
         {
-            _bus.Publish(message.GetType(), message);
-        }
+            if (message.Topic == null)
+            {
+                _bus.Publish(message.GetType(), message);
+            }
+            else
+            {
+                if (string.IsNullOrWhiteSpace(message.Topic))
+                {
+                    throw new ArgumentException("Message topic can be null, but cannot be empty or white-space.", nameof(message));
+                }
 
-        protected override void PublishImpl(IMessage message, string topic)
-        {
-            _bus.Publish(message.GetType(), message, topic);
+                _bus.Publish(message.GetType(), message, message.Topic);
+            }
         }
-
+        
         #endregion
 
         #region IEasyNetQMessagePublisher Members
