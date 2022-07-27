@@ -1,4 +1,7 @@
 ﻿2021-04-23
 ==========
-    1. Deploy to nuget.org.
++   1. Deploy to nuget.org.
 
+2022-07-27
+==========
+    1. Update to latest EasyNetQ.
