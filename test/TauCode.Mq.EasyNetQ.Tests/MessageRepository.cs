@@ -1,45 +1,42 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using TauCode.Mq.Abstractions;
+﻿using TauCode.Mq.Abstractions;
 
-namespace TauCode.Mq.EasyNetQ.Tests
+namespace TauCode.Mq.EasyNetQ.Tests;
+
+// todo: don't need it, indeed. log is enough.
+public class MessageRepository
 {
-    // todo: don't need it, indeed. log is enough.
-    public class MessageRepository
+    public static MessageRepository Instance = new MessageRepository();
+
+    private readonly List<IMessage> _messages;
+    private readonly object _lock;
+
+    private MessageRepository()
     {
-        public static MessageRepository Instance = new MessageRepository();
+        _messages = new List<IMessage>();
+        _lock = new object();
+    }
 
-        private readonly List<IMessage> _messages;
-        private readonly object _lock;
-
-        private MessageRepository()
+    public void Clear()
+    {
+        lock (_lock)
         {
-            _messages = new List<IMessage>();
-            _lock = new object();
+            _messages.Clear();
         }
+    }
 
-        public void Clear()
+    public void Add(IMessage message)
+    {
+        lock (_lock)
         {
-            lock (_lock)
-            {
-                _messages.Clear();
-            }
+            _messages.Add(message);
         }
+    }
 
-        public void Add(IMessage message)
+    public IReadOnlyList<IMessage> GetMessages()
+    {
+        lock (_lock)
         {
-            lock (_lock)
-            {
-                _messages.Add(message);
-            }
-        }
-
-        public IReadOnlyList<IMessage> GetMessages()
-        {
-            lock (_lock)
-            {
-                return _messages.ToList();
-            }
+            return _messages.ToList();
         }
     }
 }

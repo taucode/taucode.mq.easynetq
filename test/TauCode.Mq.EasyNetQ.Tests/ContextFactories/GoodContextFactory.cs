@@ -1,12 +1,11 @@
 ﻿using TauCode.Mq.EasyNetQ.Tests.Contexts;
 
-namespace TauCode.Mq.EasyNetQ.Tests.ContextFactories
+namespace TauCode.Mq.EasyNetQ.Tests.ContextFactories;
+
+public class GoodContextFactory : IMessageHandlerContextFactory
 {
-    public class GoodContextFactory : IMessageHandlerContextFactory
+    public IMessageHandlerContext CreateContext()
     {
-        public IMessageHandlerContext CreateContext()
-        {
-            return new GoodContext();
-        }
+        return new GoodContext();
     }
 }
