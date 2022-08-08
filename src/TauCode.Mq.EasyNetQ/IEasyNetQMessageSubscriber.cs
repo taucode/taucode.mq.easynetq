@@ -1,7 +1,6 @@
-﻿namespace TauCode.Mq.EasyNetQ
+﻿namespace TauCode.Mq.EasyNetQ;
+
+public interface IEasyNetQMessageSubscriber : IMessageSubscriber
 {
-    public interface IEasyNetQMessageSubscriber : IMessageSubscriber
-    {
-        string ConnectionString { get; set; }
-    }
+    string ConnectionString { get; set; }
 }
