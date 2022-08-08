@@ -1,13 +1,11 @@
-﻿using System;
-using TauCode.Mq.EasyNetQ.Tests.Messages;
+﻿using TauCode.Mq.EasyNetQ.Tests.Messages;
 
-namespace TauCode.Mq.EasyNetQ.Tests.BadHandlers
+namespace TauCode.Mq.EasyNetQ.Tests.BadHandlers;
+
+public class AbstractMessageHandler : MessageHandlerBase<AbstractMessage>
 {
-    public class AbstractMessageHandler : MessageHandlerBase<AbstractMessage>
+    public override void Handle(AbstractMessage message)
     {
-        public override void Handle(AbstractMessage message)
-        {
-            throw new NotSupportedException();
-        }
+        throw new NotSupportedException();
     }
 }

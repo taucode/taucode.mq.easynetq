@@ -1,146 +1,143 @@
 ﻿using EasyNetQ;
 using EasyNetQ.NonGeneric;
-using System;
-using System.Threading.Tasks;
 using TauCode.Mq.Exceptions;
 using TauCode.Working;
 
 using ITauMessage = TauCode.Mq.Abstractions.IMessage;
 
-namespace TauCode.Mq.EasyNetQ
+namespace TauCode.Mq.EasyNetQ;
+
+public class EasyNetQMessageSubscriber : MessageSubscriberBase, IEasyNetQMessageSubscriber
 {
-    public class EasyNetQMessageSubscriber : MessageSubscriberBase, IEasyNetQMessageSubscriber
+    #region Fields
+
+    private string _connectionString;
+    private IBus _bus;
+
+    #endregion
+
+    #region Constructor
+
+    public EasyNetQMessageSubscriber(IMessageHandlerContextFactory contextFactory)
+        : base(contextFactory)
     {
-        #region Fields
+    }
 
-        private string _connectionString;
-        private IBus _bus;
+    public EasyNetQMessageSubscriber(IMessageHandlerContextFactory contextFactory, string connectionString)
+        : base(contextFactory)
+    {
+        this.ConnectionString = connectionString;
+    }
 
-        #endregion
+    #endregion
 
-        #region Constructor
+    #region Overridden
 
-        public EasyNetQMessageSubscriber(IMessageHandlerContextFactory contextFactory)
-            : base(contextFactory)
+    protected override void InitImpl()
+    {
+        if (string.IsNullOrEmpty(this.ConnectionString))
         {
+            throw new MqException("Cannot start: connection string is null or empty.");
         }
 
-        public EasyNetQMessageSubscriber(IMessageHandlerContextFactory contextFactory, string connectionString)
-            : base(contextFactory)
+        _bus = RabbitHutch.CreateBus(this.ConnectionString);
+    }
+
+    protected override void ShutdownImpl()
+    {
+        _bus.Dispose();
+    }
+
+    protected override IDisposable SubscribeImpl(ISubscriptionRequest subscriptionRequest)
+    {
+        if (subscriptionRequest.Handler != null)
         {
-            this.ConnectionString = connectionString;
-        }
+            // got sync handler
+            var subscriptionId = Guid.NewGuid().ToString();
 
-        #endregion
+            IDisposable handle;
 
-        #region Overridden
-
-        protected override void InitImpl()
-        {
-            if (string.IsNullOrEmpty(this.ConnectionString))
+            if (subscriptionRequest.Topic == null)
             {
-                throw new MqException("Cannot start: connection string is null or empty.");
-            }
+                void EasyNetQHandler(object messageObject) => subscriptionRequest.Handler((ITauMessage)messageObject);
 
-            _bus = RabbitHutch.CreateBus(this.ConnectionString);
-        }
-
-        protected override void ShutdownImpl()
-        {
-            _bus.Dispose();
-        }
-
-        protected override IDisposable SubscribeImpl(ISubscriptionRequest subscriptionRequest)
-        {
-            if (subscriptionRequest.Handler != null)
-            {
-                // got sync handler
-                var subscriptionId = Guid.NewGuid().ToString();
-
-                IDisposable handle;
-
-                if (subscriptionRequest.Topic == null)
-                {
-                    void EasyNetQHandler(object messageObject) => subscriptionRequest.Handler((ITauMessage)messageObject);
-
-                    handle = _bus.Subscribe(
-                        subscriptionRequest.MessageType,
-                        subscriptionId,
-                        EasyNetQHandler,
-                        configuration => configuration.WithAutoDelete());
-                }
-                else
-                {
-                    void EasyNetQHandler(object messageObject) => subscriptionRequest.Handler((ITauMessage)messageObject);
-
-                    handle = _bus.Subscribe(
-                        subscriptionRequest.MessageType,
-                        subscriptionId,
-                        EasyNetQHandler,
-                        configuration => configuration
-                            .WithTopic(subscriptionRequest.Topic)
-                            .WithAutoDelete());
-                }
-
-                return handle;
+                handle = _bus.Subscribe(
+                    subscriptionRequest.MessageType,
+                    subscriptionId,
+                    EasyNetQHandler,
+                    configuration => configuration.WithAutoDelete());
             }
             else
             {
-                // got async handler
-                var subscriptionId = Guid.NewGuid().ToString();
+                void EasyNetQHandler(object messageObject) => subscriptionRequest.Handler((ITauMessage)messageObject);
 
-                IDisposable handle;
-
-                if (subscriptionRequest.Topic == null)
-                {
-                    async Task EasyNetQHandler(object messageObject) => await subscriptionRequest.AsyncHandler((ITauMessage)messageObject);
-
-                    handle = _bus.SubscribeAsync(
-                        subscriptionRequest.MessageType,
-                        subscriptionId,
-                        EasyNetQHandler,
-                        configuration => configuration.WithAutoDelete());
-                }
-                else
-                {
-                    async Task EasyNetQHandler(object messageObject) => await subscriptionRequest.AsyncHandler((ITauMessage)messageObject);
-
-                    handle = _bus.SubscribeAsync(
-                        subscriptionRequest.MessageType,
-                        subscriptionId,
-                        EasyNetQHandler,
-                        configuration => configuration
-                            .WithTopic(subscriptionRequest.Topic)
-                            .WithAutoDelete());
-                }
-
-                return handle;
+                handle = _bus.Subscribe(
+                    subscriptionRequest.MessageType,
+                    subscriptionId,
+                    EasyNetQHandler,
+                    configuration => configuration
+                        .WithTopic(subscriptionRequest.Topic)
+                        .WithAutoDelete());
             }
+
+            return handle;
         }
-
-        #endregion
-
-        #region IEasyNetQMessageSubscriber Members
-
-        public string ConnectionString
+        else
         {
-            get => _connectionString;
-            set
+            // got async handler
+            var subscriptionId = Guid.NewGuid().ToString();
+
+            IDisposable handle;
+
+            if (subscriptionRequest.Topic == null)
             {
-                if (this.State != WorkerState.Stopped)
-                {
-                    throw new MqException("Cannot set connection string while subscriber is running.");
-                }
+                async Task EasyNetQHandler(object messageObject) => await subscriptionRequest.AsyncHandler((ITauMessage)messageObject);
 
-                if (this.IsDisposed)
-                {
-                    throw new ObjectDisposedException(this.Name);
-                }
-
-                _connectionString = value;
+                handle = _bus.SubscribeAsync(
+                    subscriptionRequest.MessageType,
+                    subscriptionId,
+                    EasyNetQHandler,
+                    configuration => configuration.WithAutoDelete());
             }
-        }
+            else
+            {
+                async Task EasyNetQHandler(object messageObject) => await subscriptionRequest.AsyncHandler((ITauMessage)messageObject);
 
-        #endregion
+                handle = _bus.SubscribeAsync(
+                    subscriptionRequest.MessageType,
+                    subscriptionId,
+                    EasyNetQHandler,
+                    configuration => configuration
+                        .WithTopic(subscriptionRequest.Topic)
+                        .WithAutoDelete());
+            }
+
+            return handle;
+        }
     }
+
+    #endregion
+
+    #region IEasyNetQMessageSubscriber Members
+
+    public string ConnectionString
+    {
+        get => _connectionString;
+        set
+        {
+            if (this.State != WorkerState.Stopped)
+            {
+                throw new MqException("Cannot set connection string while subscriber is running.");
+            }
+
+            if (this.IsDisposed)
+            {
+                throw new ObjectDisposedException(this.Name);
+            }
+
+            _connectionString = value;
+        }
+    }
+
+    #endregion
 }
