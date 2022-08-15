@@ -1,4 +1,7 @@
-﻿namespace TauCode.Mq.EasyNetQ.Tests.Contexts;
+﻿using TauCode.Mq.EasyNetQ.OldTests.Handlers.Bye.Sync;
+using TauCode.Mq.EasyNetQ.OldTests.Handlers.Hello.Sync;
+
+namespace TauCode.Mq.EasyNetQ.OldTests.Contexts;
 
 public class BadContext : IMessageHandlerContext
 {
@@ -48,21 +51,20 @@ public class BadContext : IMessageHandlerContext
 
         if (_returnNullOnGetService)
         {
-            return null!;
+            return null;
         }
 
-        throw new NotImplementedException("todo");
-        //if (serviceType == typeof(HelloHandler))
-        //{
-        //    if (_returnsWrongService)
-        //    {
-        //        return new ByeHandler();
-        //    }
+        if (serviceType == typeof(HelloHandler))
+        {
+            if (_returnsWrongService)
+            {
+                return new ByeHandler();
+            }
 
-        //    return new HelloHandler();
-        //}
+            return new HelloHandler();
+        }
 
-        //throw new NotSupportedException($"Service of type '{serviceType.FullName}' not supported.");
+        throw new NotSupportedException($"Service of type '{serviceType.FullName}' not supported.");
     }
 
     public Task EndAsync(CancellationToken cancellationToken)

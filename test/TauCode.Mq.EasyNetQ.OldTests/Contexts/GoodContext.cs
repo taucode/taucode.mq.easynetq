@@ -1,31 +1,31 @@
 ﻿using Serilog;
-using TauCode.Mq.EasyNetQ.Tests.Handlers.Good;
+using TauCode.Mq.EasyNetQ.OldTests.Handlers.Bye.Async;
+using TauCode.Mq.EasyNetQ.OldTests.Handlers.Bye.Sync;
+using TauCode.Mq.EasyNetQ.OldTests.Handlers.Hello.Async;
+using TauCode.Mq.EasyNetQ.OldTests.Handlers.Hello.Sync;
 
-namespace TauCode.Mq.EasyNetQ.Tests.Contexts;
+namespace TauCode.Mq.EasyNetQ.OldTests.Contexts;
 
-// todo clean
 public class GoodContext : IMessageHandlerContext
 {
-    private static readonly HashSet<Type> SupportedHandlerTypes = new Type[]
-    {
-        typeof(HelloHandler),
+    private static readonly HashSet<Type> SupportedHandlerTypes = new[]
+        {
+            typeof(BeBackAsyncHandler),
+            typeof(ByeAsyncHandler),
 
-        //typeof(BeBackAsyncHandler),
-        //typeof(ByeAsyncHandler),
+            typeof(ByeHandler),
 
-        //typeof(ByeHandler),
+            typeof(CancelingHelloAsyncHandler),
+            typeof(FaultingHelloAsyncHandler),
+            typeof(FishHaterAsyncHandler),
+            typeof(HelloAsyncHandler),
+            typeof(WelcomeAsyncHandler),
 
-        //typeof(CancelingHelloAsyncHandler),
-        //typeof(FaultingHelloAsyncHandler),
-        //typeof(FishHaterAsyncHandler),
-        //typeof(HelloAsyncHandler),
-        //typeof(WelcomeAsyncHandler),
-
-        //typeof(FishHaterHandler),
-        //typeof(HelloHandler),
-        //typeof(WelcomeHandler),
-    }
-    .ToHashSet();
+            typeof(FishHaterHandler),
+            typeof(HelloHandler),
+            typeof(WelcomeHandler),
+        }
+        .ToHashSet();
 
     public Task BeginAsync(CancellationToken cancellationToken)
     {

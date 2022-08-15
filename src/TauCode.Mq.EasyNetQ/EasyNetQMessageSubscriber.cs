@@ -1,9 +1,9 @@
 ﻿using EasyNetQ;
-using EasyNetQ.NonGeneric;
+using Serilog;
 using TauCode.Mq.Exceptions;
 using TauCode.Working;
 
-using ITauMessage = TauCode.Mq.Abstractions.IMessage;
+using ITauMessage = TauCode.Mq.IMessage;
 
 namespace TauCode.Mq.EasyNetQ;
 
@@ -11,21 +11,33 @@ public class EasyNetQMessageSubscriber : MessageSubscriberBase, IEasyNetQMessage
 {
     #region Fields
 
-    private string _connectionString;
-    private IBus _bus;
+    private string? _connectionString;
+    private IBus? _bus;
 
     #endregion
 
     #region Constructor
 
     public EasyNetQMessageSubscriber(IMessageHandlerContextFactory contextFactory)
-        : base(contextFactory)
+        : base(contextFactory, null)
     {
     }
 
-    public EasyNetQMessageSubscriber(IMessageHandlerContextFactory contextFactory, string connectionString)
-        : base(contextFactory)
+    public EasyNetQMessageSubscriber(
+        IMessageHandlerContextFactory contextFactory,
+        ILogger? logger)
+        : base(contextFactory, logger)
     {
+    }
+
+    public EasyNetQMessageSubscriber(
+        IMessageHandlerContextFactory contextFactory,
+        string? connectionString,
+        ILogger? logger)
+        : base(contextFactory, logger)
+    {
+        ArgumentNullException.ThrowIfNull(contextFactory);
+
         this.ConnectionString = connectionString;
     }
 
@@ -40,95 +52,62 @@ public class EasyNetQMessageSubscriber : MessageSubscriberBase, IEasyNetQMessage
             throw new MqException("Cannot start: connection string is null or empty.");
         }
 
-        _bus = RabbitHutch.CreateBus(this.ConnectionString);
+        _bus = RabbitHutch.CreateBus(
+            this.ConnectionString,
+            x => x.EnableSerilogLogging(this.OriginalLogger));
     }
 
     protected override void ShutdownImpl()
     {
-        _bus.Dispose();
+        _bus?.Dispose();  // todo: will wait until IMessageHandler.HandleAsync returns?
+        _bus = null;
     }
 
     protected override IDisposable SubscribeImpl(ISubscriptionRequest subscriptionRequest)
     {
-        if (subscriptionRequest.Handler != null)
+        var subscriptionId = Guid.NewGuid().ToString();
+
+        IDisposable handle;
+
+        if (subscriptionRequest.Topic == null)
         {
-            // got sync handler
-            var subscriptionId = Guid.NewGuid().ToString();
+            Task EasyNetQHandler(object messageObject, Type type, CancellationToken cancellationToken) =>
+                subscriptionRequest.AsyncHandler((ITauMessage)messageObject, cancellationToken);
 
-            IDisposable handle;
-
-            if (subscriptionRequest.Topic == null)
-            {
-                void EasyNetQHandler(object messageObject) => subscriptionRequest.Handler((ITauMessage)messageObject);
-
-                handle = _bus.Subscribe(
-                    subscriptionRequest.MessageType,
-                    subscriptionId,
-                    EasyNetQHandler,
-                    configuration => configuration.WithAutoDelete());
-            }
-            else
-            {
-                void EasyNetQHandler(object messageObject) => subscriptionRequest.Handler((ITauMessage)messageObject);
-
-                handle = _bus.Subscribe(
-                    subscriptionRequest.MessageType,
-                    subscriptionId,
-                    EasyNetQHandler,
-                    configuration => configuration
-                        .WithTopic(subscriptionRequest.Topic)
-                        .WithAutoDelete());
-            }
-
-            return handle;
+            handle = _bus!.PubSub.Subscribe(
+                subscriptionId,
+                subscriptionRequest.MessageType,
+                EasyNetQHandler,
+                configuration => configuration.WithAutoDelete());
         }
         else
         {
-            // got async handler
-            var subscriptionId = Guid.NewGuid().ToString();
+            Task EasyNetQHandler(object messageObject, Type type, CancellationToken cancellationToken) =>
+                subscriptionRequest.AsyncHandler((ITauMessage)messageObject, cancellationToken);
 
-            IDisposable handle;
-
-            if (subscriptionRequest.Topic == null)
-            {
-                async Task EasyNetQHandler(object messageObject) => await subscriptionRequest.AsyncHandler((ITauMessage)messageObject);
-
-                handle = _bus.SubscribeAsync(
-                    subscriptionRequest.MessageType,
-                    subscriptionId,
-                    EasyNetQHandler,
-                    configuration => configuration.WithAutoDelete());
-            }
-            else
-            {
-                async Task EasyNetQHandler(object messageObject) => await subscriptionRequest.AsyncHandler((ITauMessage)messageObject);
-
-                handle = _bus.SubscribeAsync(
-                    subscriptionRequest.MessageType,
-                    subscriptionId,
-                    EasyNetQHandler,
-                    configuration => configuration
-                        .WithTopic(subscriptionRequest.Topic)
-                        .WithAutoDelete());
-            }
-
-            return handle;
+            handle = _bus!.PubSub.Subscribe(
+                subscriptionId,
+                subscriptionRequest.MessageType,
+                EasyNetQHandler,
+                configuration => configuration
+                    .WithTopic(subscriptionRequest.Topic)
+                    .WithAutoDelete());
         }
+
+        return handle;
     }
 
     #endregion
 
     #region IEasyNetQMessageSubscriber Members
 
-    public string ConnectionString
+    public string? ConnectionString
     {
-        get => _connectionString;
+        get => _connectionString!;
         set
         {
-            if (this.State != WorkerState.Stopped)
-            {
-                throw new MqException("Cannot set connection string while subscriber is running.");
-            }
+            this.AllowIfStateIs($"set {nameof(ConnectionString)}", WorkerState.Stopped);
+
 
             if (this.IsDisposed)
             {

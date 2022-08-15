@@ -2,5 +2,5 @@
 
 public interface IEasyNetQMessagePublisher : IMessagePublisher
 {
-    string ConnectionString { get; set; }
+    string? ConnectionString { get; set; }
 }
