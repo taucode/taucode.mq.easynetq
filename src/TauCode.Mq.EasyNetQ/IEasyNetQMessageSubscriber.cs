@@ -2,5 +2,5 @@
 
 public interface IEasyNetQMessageSubscriber : IMessageSubscriber
 {
-    string ConnectionString { get; set; }
+    string? ConnectionString { get; set; }
 }
