@@ -1,12 +1,9 @@
 dotnet restore
 
-dotnet clean --configuration Debug
-dotnet clean --configuration Release
+dotnet build TauCode.Mq.EasyNetQ.sln -c Debug
+dotnet build TauCode.Mq.EasyNetQ.sln -c Release
 
-dotnet build --configuration Debug
-dotnet build --configuration Release
-
-dotnet test -c Debug .\test\TauCode.Mq.EasyNetQ.Tests\TauCode.Mq.EasyNetQ.Tests.csproj
-dotnet test -c Release .\test\TauCode.Mq.EasyNetQ.Tests\TauCode.Mq.EasyNetQ.Tests.csproj
+dotnet test TauCode.Mq.EasyNetQ.sln -c Debug
+dotnet test TauCode.Mq.EasyNetQ.sln -c Release
 
 nuget pack nuget\TauCode.Mq.EasyNetQ.nuspec
